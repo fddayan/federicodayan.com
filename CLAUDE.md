@@ -78,8 +78,13 @@ with dark mode via `prefers-color-scheme` plus a `data-theme` override saved in
   `<meta>` description and `og:` tags, and HTML in an attribute breaks the page.
   Scope edits to the exact line.
 - Commit only when asked.
-- **No email address anywhere**: not on the page, not in files, not in commit
-  metadata. Contact is through the booking link only. This repo's local git config
+- **No plain-text email address anywhere**: not on the page, not in files, not in
+  commit metadata. The only email contact is the "Tell me about your project" button
+  (class `email-btn`, in the hero and the final CTA):
+  it uses the alias `hello` at the site's domain (a DNSimple email forward to
+  Federico's inbox), assembled in JS on click so it never appears in the HTML.
+  Never use or mention the real inbox address. The booking link stays the primary
+  CTA. This repo's local git config
   uses the GitHub no-reply address (`188936+fddayan@users.noreply.github.com`);
   check `git config user.email` before committing.
 
