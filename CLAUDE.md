@@ -50,7 +50,8 @@ Links:
    stats; photo carousel with badges; full-width "From idea to launch" steps
    (Talk → Plan → Build → Launch).
 3. **Working with me:** 6 icon tiles.
-4. **Built with AI:** text on the left, a three-step flow card on the right.
+4. **Built with AI:** text on the left, a card on the right with a single
+   "You get there faster" item.
 5. **The Setup:** 4 icon tiles (citizen, company, 1099/EIN, U.S. hours).
 6. **See my track record:** LinkedIn and GitHub cards.
 7. **Final CTA**, then the footer.

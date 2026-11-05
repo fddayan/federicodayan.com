@@ -213,6 +213,10 @@
 
   .reveal { opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .7s ease; }
   .reveal.in { opacity: 1; transform: none; }
+  /* Hidden sky: a comet crosses now and then and briefly reveals stars along its path */
+  .sky { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+  .sky canvas { display: block; width: 100%; height: 100%; }
+  @media (prefers-reduced-motion: reduce) { .sky { display: none; } }
   @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
 
   @media (max-width: 900px) {
@@ -235,12 +239,11 @@
 </style>
 </head>
 <body>
+<div class="sky" aria-hidden="true"><canvas></canvas></div>
 
 <svg class="sprite" width="0" height="0" aria-hidden="true">
   <defs>
     <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
-    <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
-    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
     <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
     <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></symbol>
     <symbol id="i-office" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/></symbol>
@@ -383,14 +386,6 @@
       </div>
       <div class="flow">
         <div class="frow">
-          <span class="tico"><svg><use href="#i-spark"/></svg></span>
-          <div><h3>AI drafts the code</h3><p>Hours of routine work done in minutes.</p></div>
-        </div>
-        <div class="frow">
-          <span class="tico"><svg><use href="#i-shield"/></svg></span>
-          <div><h3>I review and test it</h3><p>Nothing ships without an experienced eye on it.</p></div>
-        </div>
-        <div class="frow">
           <span class="tico solid"><svg><use href="#i-bolt"/></svg></span>
           <div><h3>You get there faster</h3><p>More of your product, sooner.</p></div>
         </div>
@@ -521,6 +516,146 @@
     start();
   })();
   document.getElementById('year').textContent = new Date().getFullYear();
+  // Hidden sky: a star map (stars, faint nebula, constellations) is drawn off-screen.
+  // Every 5–10s a comet crosses left to right and reveals the sky along its path,
+  // which then fades back out over a few seconds. Nothing animates between passes.
+  (function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var cv = document.querySelector('.sky canvas');
+    if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext('2d');
+    var sky = document.createElement('canvas'), sctx = sky.getContext('2d');
+    var mask = document.createElement('canvas'), mctx = mask.getContext('2d');
+    var W = 0, H = 0, flight = null, running = false;
+    var TAIL = 170, REVEAL = 55, LIFE = 1200; // LIFE: ms each revealed spot takes to fade out
+
+    function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+    function rng(seed) { // small seeded PRNG so the sky is the same on every pass
+      return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    }
+
+    function paintSky() {
+      var r = rng(20260105), ink = css('--text'), glow = css('--accent');
+      sctx.clearRect(0, 0, W, H);
+      // faint nebula clouds
+      for (var n = 0; n < 4; n++) {
+        var nx = r() * W, ny = r() * H, nr = Math.max(W, H) * (0.18 + r() * 0.2);
+        var g = sctx.createRadialGradient(nx, ny, 0, nx, ny, nr);
+        g.addColorStop(0, glow); g.addColorStop(1, 'transparent');
+        sctx.globalAlpha = 0.16; sctx.fillStyle = g; sctx.fillRect(0, 0, W, H);
+      }
+      // stars
+      sctx.fillStyle = ink;
+      var count = Math.round(W * H / 2200);
+      for (var i = 0; i < count; i++) {
+        var big = r() > 0.93, sr = big ? 1.2 + r() * 1.1 : 0.4 + r() * 0.7;
+        sctx.globalAlpha = big ? 0.9 : 0.35 + r() * 0.45;
+        sctx.beginPath(); sctx.arc(r() * W, r() * H, sr, 0, Math.PI * 2); sctx.fill();
+      }
+      // a few constellations: short chains of bright stars joined by thin lines
+      sctx.strokeStyle = ink; sctx.lineWidth = 0.8;
+      var groups = Math.max(3, Math.round(W * H / 220000));
+      for (var c = 0; c < groups; c++) {
+        var px = r() * W, py = r() * H, pts = [];
+        for (var k = 0; k < 4 + Math.floor(r() * 3); k++) {
+          px += (r() - 0.3) * 120; py += (r() - 0.5) * 90; pts.push([px, py]);
+        }
+        sctx.globalAlpha = 0.35; sctx.beginPath();
+        pts.forEach(function (p, j) { j ? sctx.lineTo(p[0], p[1]) : sctx.moveTo(p[0], p[1]); });
+        sctx.stroke();
+        sctx.globalAlpha = 0.95;
+        pts.forEach(function (p) { sctx.beginPath(); sctx.arc(p[0], p[1], 1.8, 0, Math.PI * 2); sctx.fill(); });
+      }
+      sctx.globalAlpha = 1;
+    }
+
+    function resize() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      [cv, sky, mask].forEach(function (c) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); });
+      [ctx, sctx, mctx].forEach(function (c) { c.setTransform(dpr, 0, 0, dpr, 0, 0); });
+      paintSky();
+    }
+
+    function head(f, now) {
+      var p = Math.min(1, (now - f.t0) / f.dur);
+      var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; // ease in-out
+      return { x: f.x0 + f.dx * e, y: f.y0 + f.dy * e, p: p };
+    }
+
+    // Each revealed spot remembers when the comet passed it and fades on its own,
+    // so the trail dissolves behind the comet instead of all at once.
+    var spots = [];
+    function drawMask(now) {
+      mctx.clearRect(0, 0, W, H);
+      spots = spots.filter(function (s) { return now - s.t < LIFE; });
+      spots.forEach(function (s) {
+        var k = 1 - (now - s.t) / LIFE, a = 0.5 * k * k;
+        var g = mctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, REVEAL);
+        g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        mctx.fillStyle = g; mctx.fillRect(s.x - REVEAL, s.y - REVEAL, REVEAL * 2, REVEAL * 2);
+      });
+    }
+
+    function frame(now) {
+      var h = null;
+      if (flight) {
+        h = head(flight, now);
+        // add spots along the segment since the last frame so the trail has no gaps
+        var steps = Math.max(1, Math.ceil(Math.hypot(h.x - flight.px, h.y - flight.py) / 12));
+        for (var s = 1; s <= steps; s++) spots.push({ x: flight.px + (h.x - flight.px) * s / steps, y: flight.py + (h.y - flight.py) * s / steps, t: now });
+        flight.px = h.x; flight.py = h.y;
+      }
+      drawMask(now);
+
+      // sky shows only where the mask is
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(sky, 0, 0, W, H);
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.drawImage(mask, 0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+
+      if (h) {
+        var a = h.p > 0.75 ? (1 - h.p) / 0.25 : 1; // full brightness on entry, fades out at the end
+        var tx = h.x - flight.ux * TAIL, ty = h.y - flight.uy * TAIL;
+        var tail = ctx.createLinearGradient(tx, ty, h.x, h.y);
+        tail.addColorStop(0, 'transparent'); tail.addColorStop(1, flight.color);
+        ctx.globalAlpha = 0.85 * a; ctx.strokeStyle = tail; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(h.x, h.y); ctx.stroke();
+        ctx.shadowColor = flight.color; ctx.shadowBlur = 12; ctx.fillStyle = flight.color;
+        ctx.beginPath(); ctx.arc(h.x, h.y, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+        if (h.p >= 1) { flight = null; setTimeout(fly, 5000 + Math.random() * 5000); }
+      }
+
+      // keep animating until the last spot has faded, then go idle
+      if (flight || spots.length) requestAnimationFrame(frame);
+      else { running = false; ctx.clearRect(0, 0, W, H); }
+    }
+
+    function fly() {
+      if (document.hidden) { setTimeout(fly, 3000); return; }
+      var ang = (15 + Math.random() * 20) * Math.PI / 180;
+      var dist = Math.max(W, H) * (0.55 + Math.random() * 0.25);
+      // enter from just off-screen: either the left edge or the top edge
+      var x0, y0;
+      if (Math.random() < 0.5) { x0 = -20; y0 = Math.random() * H * 0.6; }
+      else { x0 = Math.random() * W * 0.6; y0 = -20; }
+      flight = { x0: x0, y0: y0, px: x0, py: y0, dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist,
+        ux: Math.cos(ang), uy: Math.sin(ang), dur: 2200 + Math.random() * 700, t0: performance.now(), color: css('--accent') };
+      if (!running) { running = true; requestAnimationFrame(frame); }
+    }
+
+    resize();
+    var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(resize, 200); });
+    // repaint the sky in the new colours when the theme changes
+    new MutationObserver(paintSky).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', paintSky);
+    setTimeout(fly, 1500);
+  })();
   // Email link is assembled only on click, so the address never sits in the page for scrapers.
   document.querySelectorAll('.email-btn').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
