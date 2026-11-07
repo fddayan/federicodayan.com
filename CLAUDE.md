@@ -26,9 +26,15 @@ for something to cut.
 - **Never mention price, rates, or billing model** anywhere on the page, including
   "fixed price".
 - **"12 MVPs built"**: some in code, some no-code, some joined at a very early stage.
+  Don't mention "code" or "no-code" on the page: Federico finds it confusing.
   Don't say "from scratch" or "12 startups built".
 - **14 years working remotely**, through Toptal and Arc.dev.
 - **20 years** building software.
+- **20+ companies and startups, 15+ industries, 10+ languages and frameworks**:
+  counted from Federico's résumé (23 companies; industries from education and
+  grants to energy, travel, ad tech, media, government and nonprofits; Ruby,
+  JavaScript, TypeScript, SQL, Java, Rails, React, Next.js, Angular, jQuery,
+  Tailwind, GraphQL). Not yet confirmed by Federico.
 - **Just Federico, no team.** He takes on **only 1–2 projects at a time**.
 - **The Setup:** U.S. citizen; U.S. company **Dayan Business Solutions** (Florida);
   invoices on a **1099** under the company's **EIN** (Employer Identification
@@ -42,19 +48,22 @@ Links:
 - Booking: https://calendar.app.google/jG6zRt51k41eSZWc6
 - LinkedIn: https://www.linkedin.com/in/federico-dayan
 - GitHub: https://github.com/fddayan
+- Toptal: https://www.toptal.com/developers/resume/federico-dayan
 
 ## Page structure (`index.html`)
 
 1. **Nav:** name, LinkedIn and GitHub icons, dark-mode toggle, "Schedule a call".
-2. **Hero:** headline (*trust*, *idea*, *product* highlighted), sub line, CTA, three
-   stats; photo carousel with badges; full-width "From idea to launch" steps
-   (Talk → Plan → Build → Launch).
-3. **Working with me:** 6 icon tiles.
+2. **Hero:** headline (*trust*, *idea*, *product* highlighted), sub line, CTA,
+   company logo row; photo with badges; then a full-width row of six stats.
+3. **How it works:** one section of three stacked cards in the same style
+   (`.mini-journey`): "From idea to launch" (Talk → Plan → Build → Launch, with a
+   dashed connector), then "Working with me" (`.plain.six`): 6 items (just me, clear plan,
+   weekly progress, plain English, essentials first, you own it all), then 4 items
+   (citizen, company, 1099/EIN, U.S. hours). Keep each line short.
 4. **Built with AI:** text on the left, a card on the right with a single
    "You get there faster" item.
-5. **The Setup:** 4 icon tiles (citizen, company, 1099/EIN, U.S. hours).
-6. **See my track record:** LinkedIn and GitHub cards.
-7. **Final CTA**, then the footer.
+5. **See my track record:** LinkedIn, GitHub and Toptal cards.
+6. **Final CTA**, then the footer.
 
 Design: all CSS and JS live inline in `index.html`. Colors are tokens on `:root`,
 with dark mode via `prefers-color-scheme` plus a `data-theme` override saved in
@@ -63,10 +72,9 @@ with dark mode via `prefers-color-scheme` plus a `data-theme` override saved in
 
 ## Photos
 
-- `federico.jpeg` and `federico2-bw.jpeg` are in the carousel. All photos are
-  **black and white**.
-- To add a photo, convert it, then add an `<img>` and a dot `<button>` inside
-  `#carousel`:
+- The hero shows a single photo, `federico.jpeg`, in **black and white**. There is
+  no carousel.
+- To swap it, convert the new photo first:
   `ffmpeg -v error -y -i in.jpeg -vf "format=gray" -q:v 2 name-bw.jpeg`
 - Unused or color originals go in `_originals/`, which is gitignored and never
   published. Every committed file in this repo is public.
@@ -88,6 +96,14 @@ with dark mode via `prefers-color-scheme` plus a `data-theme` override saved in
   CTA. This repo's local git config
   uses the GitHub no-reply address (`188936+fddayan@users.noreply.github.com`);
   check `git config user.email` before committing.
+
+## Analytics
+
+GoatCounter (no cookies, no banner), dashboard at
+https://federicodayan.goatcounter.com. The script tag is at the end of `<body>`.
+Buttons are tracked with `data-goatcounter-click`: `schedule-call-nav`,
+`schedule-call-hero`, `schedule-call-final`, `email-hero`, `email-final`. Give any
+new CTA its own name. Don't add cookie-based analytics.
 
 ## Deploying to GitHub Pages
 
