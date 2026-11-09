@@ -234,8 +234,8 @@
     .hero { padding: 20px 0 40px; }
     .hero-grid { grid-template-columns: 1fr; gap: 36px; }
     .trust { grid-template-columns: repeat(3, 1fr); }
-    .photo-wrap { max-width: 320px; order: -1; margin: 0 auto; }
-    .badge.b1 { left: -12px; } .badge.b2 { right: -12px; }
+    .photo-wrap { width: 100%; max-width: 320px; order: -1; margin: 0 auto; }
+    .badge.b1 { left: -12px; bottom: 60px; } .badge.b2 { left: -12px; right: auto; top: auto; bottom: 12px; }
     .vs, .built { grid-template-columns: 1fr; }
     .journey { grid-template-columns: 1fr 1fr; row-gap: 36px; }
     .journey::before { display: none; }
@@ -244,6 +244,7 @@
   @media (max-width: 520px) {
     .wrap { padding: 0 16px; }
     .nav-cta { display: none; }
+    .photo-wrap { max-width: 260px; }
     .cta-row .btn { width: 100%; }
     .trust { gap: 20px; }
     .trust b { font-size: 1.6rem; }
